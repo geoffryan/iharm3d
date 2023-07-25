@@ -63,7 +63,7 @@ void save_problem_data(hid_t string_type)
 
 }
 
-void init(struct GridGeom *G, struct FluidState *S)
+void init(struct GridGeom *G, struct FluidState *S, struct AuxillaryData *D)
 {
   // Magnetic field
   double (*A)[N2 + 2*NG] = malloc(sizeof(*A) * (N1 + 2*NG));

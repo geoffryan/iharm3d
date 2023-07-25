@@ -255,6 +255,13 @@ struct FluidEMF {
   GridDouble X3;
 };
 
+struct AuxillaryData {
+#if DARK_PHOTON
+    GridVector Ac;
+    GridVector As;
+#endif
+};
+
 //struct FluidFail {
 extern GridInt pflag;
 extern GridInt fail_save;
@@ -396,6 +403,9 @@ extern int global_stop[3];
 /*******************************************************************************
     FUNCTION DECLARATIONS
 *******************************************************************************/
+// aux.c
+void init_aux(struct AuxillaryData *D);
+
 // bl_coord.c
 void bl_coord(const double X[NDIM], double *r, double *th);
 
@@ -509,7 +519,7 @@ void prim_to_flux_vec(struct GridGeom *G, struct FluidState *S, int dir,
   int loc, int kstart, int kstop, int jstart, int jstop, int istart, int istop, GridPrim flux);
 void bcon_calc(struct FluidState *S, int i, int j, int k);
 void mhd_calc(struct FluidState *S, int i, int j, int k, int dir, double *mhd);
-void get_fluid_source(struct GridGeom *G, struct FluidState *S, GridPrim *dU);
+void get_fluid_source(struct GridGeom *G, struct FluidState *S, struct AuxillaryData *D, GridPrim *dU);
 double bsq_calc(struct FluidState *S, int i, int j, int k);
 void get_state(struct GridGeom *G, struct FluidState *S, int i, int j, int k,
   int loc);
@@ -524,7 +534,7 @@ void mhd_vchar(struct GridGeom *G, struct FluidState *Sr, int i, int j, int k,
 
 // problem.c
 void set_problem_params();
-void init(struct GridGeom *G, struct FluidState *S);
+void init(struct GridGeom *G, struct FluidState *S, struct AuxillaryData *D);
 // Boundary condition (currently used for Bondi flow)
 void bound_gas_prob_x1r(int i, int j, int k, GridPrim  P, struct GridGeom *G);
 void save_problem_data();
@@ -543,7 +553,7 @@ void restart_read(char *fname, struct FluidState *S);
 int restart_init(struct GridGeom *G, struct FluidState *S);
 
 // step.c
-void step(struct GridGeom *G, struct FluidState *S);
+void step(struct GridGeom *G, struct FluidState *S, struct AuxillaryData *D);
 
 // timing.c
 void time_init();

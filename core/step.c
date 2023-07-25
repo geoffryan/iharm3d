@@ -10,9 +10,9 @@
 
 // Declarations
 double advance_fluid(struct GridGeom *G, struct FluidState *Si,
-  struct FluidState *Ss, struct FluidState *Sf, double Dt);
+  struct FluidState *Ss, struct FluidState *Sf, struct AuxillaryData *D, double Dt);
 
-void step(struct GridGeom *G, struct FluidState *S)
+void step(struct GridGeom *G, struct FluidState *S, struct AuxillaryData *D)
 {
   static struct FluidState *Stmp;
   static struct FluidState *Ssave;
@@ -38,7 +38,7 @@ void step(struct GridGeom *G, struct FluidState *S)
   // TODO add back well-named flags /after/ events
 
   // Predictor setup
-  advance_fluid(G, S, S, Stmp, 0.5*dt);
+  advance_fluid(G, S, S, Stmp, D, 0.5*dt);
   FLAG("Advance Fluid Tmp");
 
 #if ELECTRONS
@@ -62,7 +62,7 @@ void step(struct GridGeom *G, struct FluidState *S)
   FLAG("Second bounds Tmp");
 
   // Corrector step
-  double ndt = advance_fluid(G, S, Stmp, S, dt);
+  double ndt = advance_fluid(G, S, Stmp, S, D, dt);
   FLAG("Advance Fluid Full");
 
 #if ELECTRONS
@@ -114,7 +114,7 @@ void step(struct GridGeom *G, struct FluidState *S)
 }
 
 inline double advance_fluid(struct GridGeom *G, struct FluidState *Si,
-  struct FluidState *Ss, struct FluidState *Sf, double Dt)
+  struct FluidState *Ss, struct FluidState *Sf, struct AuxillaryData *D, double Dt)
 {
   static GridPrim *dU;
   static struct FluidFlux *F;
@@ -162,7 +162,7 @@ inline double advance_fluid(struct GridGeom *G, struct FluidState *Si,
   // Update Si to Sf
   timer_start(TIMER_UPDATE_U);
   get_state_vec(G, Ss, CENT, 0, N3 - 1, 0, N2 - 1, 0, N1 - 1);
-  get_fluid_source(G, Ss, dU);
+  get_fluid_source(G, Ss, D, dU);
 
   // TODO skip this call if Si,Ss aliased
   get_state_vec(G, Si, CENT, 0, N3 - 1, 0, N2 - 1, 0, N1 - 1);

@@ -91,11 +91,20 @@ int main(int argc, char *argv[])
   // TODO centralize more allocations here with safe, aligned _mm_malloc
   struct GridGeom *G = calloc(1,sizeof(struct GridGeom));
   struct FluidState *S = calloc(1,sizeof(struct FluidState));
+  struct AuxillaryData *D;
+  if(sizeof(struct AuxillaryData) > 0)
+  {
+    D = calloc(1,sizeof(struct AuxillaryData));
+    init_aux(D);
+  }
+
+  else
+    D = NULL;
 
   // Perform initializations, either directly or via checkpoint
   is_restart = restart_init(G, S);
   if (!is_restart) {
-    init(G, S);
+    init(G, S, D);
     // Set globals
     nstep = 0;
     t = 0;
@@ -141,7 +150,7 @@ int main(int argc, char *argv[])
     timer_start(TIMER_ALL);
 
     // Step variables forward in time
-    step(G, S);
+    step(G, S, D);
     nstep++;
 
     // Don't step beyond end of run

@@ -288,7 +288,7 @@ inline void mhd_vchar(struct GridGeom *G, struct FluidState *S, int i, int j, in
 }
 
 // Source terms for equations of motion
-inline void get_fluid_source(struct GridGeom *G, struct FluidState *S, GridPrim *dU)
+inline void get_fluid_source(struct GridGeom *G, struct FluidState *S, struct AuxillaryData *D, GridPrim *dU)
 {
 #if WIND_TERM
   static struct FluidState *dS;
@@ -309,6 +309,10 @@ inline void get_fluid_source(struct GridGeom *G, struct FluidState *S, GridPrim 
       for (int gam = 0; gam < NDIM; gam++)
         (*dU)[UU+gam][k][j][i] += mhd[mu][nu]*G->conn[nu][gam][mu][j][i];
     }
+
+#if DARK_PHOTON
+    DLOOP1 (*dU)[UU+mu][k][j][i] += S->P[RHO][k][j][i]*(D->Ac[mu][k][j][i] + D->As[mu][k][j][i]);
+#endif
 
     PLOOP (*dU)[ip][k][j][i] *= G->gdet[CENT][j][i];
   }

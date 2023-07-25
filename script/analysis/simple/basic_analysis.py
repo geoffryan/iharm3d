@@ -16,9 +16,17 @@ import h5py
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import multiprocessing as mp
 
+def init_worker(var_parent, grid_parent):
+    global globalvars
+    global grid
+    globalvars = var_parent
+    grid = grid_parent
+
+
+
 # Parallelize analysis by spawning several processes using multiprocessing's Pool object
 def run_parallel(function,dlist,nthreads):
-    pool = mp.Pool(nthreads)
+    pool = mp.Pool(nthreads, initializer=init_worker, initargs=(globalvars,grid))
     pool.map_async(function,dlist).get(720000)
     pool.close()
     pool.join()
@@ -450,7 +458,7 @@ if __name__=="__main__":
     dfile.close()
     gfile.close()
     ncores = psutil.cpu_count(logical=True)
-    pad = 0.25
+    pad = 0.5
     nthreads = int(ncores*pad); print("Number of threads: {0:03d}".format(nthreads))
 
     # Calling analysis function for mhdmodes
