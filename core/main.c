@@ -93,16 +93,17 @@ int main(int argc, char *argv[])
   struct FluidState *S = calloc(1,sizeof(struct FluidState));
   struct AuxillaryData *D;
   if(sizeof(struct AuxillaryData) > 0)
-  {
     D = calloc(1,sizeof(struct AuxillaryData));
-    init_aux(D);
-  }
-
   else
     D = NULL;
 
   // Perform initializations, either directly or via checkpoint
   is_restart = restart_init(G, S);
+  
+  //Initialize the auxillary data if necessary
+  if(D != NULL)
+    init_aux(D);
+  
   if (!is_restart) {
     init(G, S, D);
     // Set globals

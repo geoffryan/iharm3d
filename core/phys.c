@@ -311,7 +311,7 @@ inline void get_fluid_source(struct GridGeom *G, struct FluidState *S, struct Au
     }
 
 #if DARK_PHOTON
-    DLOOP1 (*dU)[UU+mu][k][j][i] += S->P[RHO][k][j][i]*(D->Ac[mu][k][j][i] + D->As[mu][k][j][i]);
+    DLOOP1 (*dU)[UU+mu][k][j][i] += S->P[RHO][k][j][i]*(D->Ac[mu][k][j][i] - D->As[mu][k][j][i]);
 #endif
 
     PLOOP (*dU)[ip][k][j][i] *= G->gdet[CENT][j][i];
