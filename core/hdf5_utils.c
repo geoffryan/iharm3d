@@ -362,10 +362,10 @@ int hdf5_read_single_val(void *val, const char *name, hsize_t hdf5_type)
 int hdf5_read_array(void *data, const char *name, size_t rank,
                       hsize_t *fdims, hsize_t *fstart, hsize_t *fcount, hsize_t *mdims, hsize_t *mstart, hsize_t hdf5_type)
 {
-  hid_t filespace = H5Screate_simple(4, fdims, NULL);
+  hid_t filespace = H5Screate_simple(rank, fdims, NULL);
   H5Sselect_hyperslab(filespace, H5S_SELECT_SET, fstart, NULL, fcount,
     NULL);
-  hid_t memspace = H5Screate_simple(4, mdims, NULL);
+  hid_t memspace = H5Screate_simple(rank, mdims, NULL);
   H5Sselect_hyperslab(memspace, H5S_SELECT_SET, mstart, NULL, fcount,
     NULL);
 
@@ -388,6 +388,57 @@ int hdf5_read_array(void *data, const char *name, size_t rank,
   H5Pclose(plist_id);
   H5Sclose(filespace);
   H5Sclose(memspace);
+
+  return 0;
+}
+
+int hdf5_read_array_ndim(const char *name)
+{
+  // Retusns the number of dimensions of the dataset "name".
+  char path[STRLEN];
+  strncpy(path, hdf5_cur_dir, STRLEN);
+  strncat(path, name, STRLEN - strlen(path));
+
+  if(DEBUG) fprintf(stderr,"Reading ndim of arr %s\n", path);
+  
+  //Get filespace from dset
+  hid_t dset_id = H5Dopen(file_id, path, H5P_DEFAULT);
+  hid_t filespace = H5Dget_space(dset_id);
+
+  //Read # of dims
+  int ndim = H5Sget_simple_extent_ndims(filespace);
+
+  //Clean up
+  H5Dclose(dset_id);
+  H5Sclose(filespace);
+
+  return ndim;
+}
+
+int hdf5_read_array_dims(const char *name, hsize_t dims[], int len)
+{
+  // Gets the dimensions of the dataset name.  saves in array "dims" of length
+  // len. Returns 0 on success.  Error if len < number of dimensions.
+  char path[STRLEN];
+  strncpy(path, hdf5_cur_dir, STRLEN);
+  strncat(path, name, STRLEN - strlen(path));
+
+  if(DEBUG) fprintf(stderr,"Reading dims of arr %s\n", path);
+ 
+  //Get filespace from dset
+  hid_t dset_id = H5Dopen(file_id, path, H5P_DEFAULT);
+  hid_t filespace = H5Dget_space(dset_id);
+
+  //read # of dims (must be <= length of given array)
+  int ndim = H5Sget_simple_extent_ndims(filespace);
+  if(len < ndim) FAIL(-ndim, "hdf5_read_array_dims", path);
+
+  //read the dims
+  H5Sget_simple_extent_dims(filespace, dims, NULL);
+
+  //clean up
+  H5Dclose(dset_id);
+  H5Sclose(filespace);
 
   return 0;
 }

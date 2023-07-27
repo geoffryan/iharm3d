@@ -37,6 +37,9 @@ int hdf5_exists(const char *name);
 int hdf5_read_single_val(void *val, const char *name, hsize_t hdf5_type);
 int hdf5_read_array(void *data, const char *name, size_t rank,
                       hsize_t *fdims, hsize_t *fstart, hsize_t *fcount, hsize_t *mdims, hsize_t *mstart, hsize_t hdf5_type);
+int hdf5_read_array_ndim(const char *name);
+int hdf5_read_array_dims(const char *name, hsize_t dims[], int len);
+
 
 // Convenience and annotations
 hid_t hdf5_make_str_type(size_t len);
