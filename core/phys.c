@@ -296,6 +296,14 @@ inline void get_fluid_source(struct GridGeom *G, struct FluidState *S, struct Au
   if (firstc) {dS = calloc(1,sizeof(struct FluidState)); firstc = 0;}
 #endif
 
+#if DARK_PHOTON
+    double w_dp = 1.0;
+    double eps_dp = 1.0e-3;
+
+    double cwt = cos(w_dp*t);
+    double swt = sin(w_dp*t);
+#endif
+
 #pragma omp parallel for collapse(3)
   ZLOOP {
     double mhd[NDIM][NDIM];
@@ -311,7 +319,35 @@ inline void get_fluid_source(struct GridGeom *G, struct FluidState *S, struct Au
     }
 
 #if DARK_PHOTON
-    DLOOP1 (*dU)[UU+mu][k][j][i] += S->P[RHO][k][j][i]*(D->Ac[mu][k][j][i] - D->As[mu][k][j][i]);
+
+    double F[NDIM][NDIM] = {0};
+    F[0][1] = S->ucov[2][k][j][i]*S->bcov[3][k][j][i]
+                - S->ucov[3][k][j][i]*S->bcov[2][k][j][i];
+    F[1][0] = -F[0][1];
+    F[2][0] = S->ucov[1][k][j][i]*S->bcov[3][k][j][i]
+                - S->ucov[3][k][j][i]*S->bcov[1][k][j][i];
+    F[0][2] = -F[2][0];
+    F[0][3] = S->ucov[1][k][j][i]*S->bcov[2][k][j][i]
+                - S->ucov[2][k][j][i]*S->bcov[1][k][j][i];
+    F[3][0] = -F[0][3];
+    F[1][2] = S->ucov[0][k][j][i]*S->bcov[3][k][j][i]
+                - S->ucov[3][k][j][i]*S->bcov[0][k][j][i];
+    F[2][1] = -F[1][2];
+    F[3][1] = S->ucov[0][k][j][i]*S->bcov[2][k][j][i]
+                - S->ucov[2][k][j][i]*S->bcov[0][k][j][i];
+    F[1][3] = -F[3][1];
+    F[2][3] = S->ucov[0][k][j][i]*S->bcov[1][k][j][i]
+                - S->ucov[1][k][j][i]*S->bcov[0][k][j][i];
+    F[3][2] = -F[2][3];
+    DLOOP2 F[mu][nu] *= G->gdet[CENT][j][i];
+
+    double FA[NDIM] = {0};
+    DLOOP2 {
+        FA[mu] += F[mu][nu] * (cwt * D->Ac[nu][k][j][i]
+                                  + swt * (D->As[nu][k][j][i]));
+    }
+
+    DLOOP1 (*dU)[UU+mu][k][j][i] += eps_dp * FA[mu];
 #endif
 
     PLOOP (*dU)[ip][k][j][i] *= G->gdet[CENT][j][i];
